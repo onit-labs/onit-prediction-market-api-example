@@ -3,10 +3,30 @@ import { createMarketFormSchema } from "@/lib/validators";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import SuperJSON from "superjson";
+import { isAddress, isHex } from "viem";
+
+import type { Address, Hex } from "viem";
+
+// see https://markets.onit-labs.workers.dev/api/~/docs#tag/default/POST/api/markets
+const createMarketResponseSchema = z.preprocess(
+  (val) => {
+    if (typeof val === "string") return SuperJSON.parse(val);
+    return val;
+  },
+  z.object({
+    success: z.boolean(),
+    data: z.object({
+      marketAddress: z.string().refine((val): val is Address => isAddress(val)),
+      txHash: z.string().refine((val): val is Hex => isHex(val)),
+    }),
+  })
+);
+
+type CreateMarketResponse = z.infer<typeof createMarketResponseSchema>;
 
 async function createMarketQueryFn(
   market: z.infer<typeof createMarketFormSchema>
-) {
+): Promise<CreateMarketResponse> {
   // Default body for all markets
   let body: Record<string, unknown> = {
     bettingCutoff: 0,
@@ -35,7 +55,7 @@ async function createMarketQueryFn(
     });
   }
 
-  return await response.json();
+  return createMarketResponseSchema.parse(await response.text());
 }
 
 /**
