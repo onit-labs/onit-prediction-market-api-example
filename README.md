@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Onit Prediction Market API Example
+
+This repository demonstrates how to integrate with the [Onit Prediction Market API](https://markets.onit-labs.workers.dev/api/~/docs) to create and interact with prediction markets. The example includes a complete Next.js application showcasing market creation and betting functionality.
+
+## Overview
+
+The Onit Prediction Market API allows developers to:
+- Create new prediction markets
+- Fetch market data and participants
+- Place bets on existing markets
+- Resolve their markets and distribute winnings to bettors (coming soon)
+
+This example application demonstrates these capabilities with a simple, user-friendly interface.
+
+## Demo
+
+The application includes two main pages:
+
+1. **[Market Creation Page](./app/page.tsx)**
+   - Form to create new prediction markets
+   - Collects market type, details, and metadata
+   - Submits to Onit API to create the market on-chain
+
+2. **[Betting Page](./app/[marketAddress]/page.tsx)**
+   - Displays a specific market by its address
+   - Provides a form for users to place bets
+   - Connects to user's wallet to execute betting transactions
+
+## Hooks
+
+The application uses custom React hooks to interact with the Onit API:
+
+1. **[useCreateMarket](./hooks/use-create-market.ts)**
+   - Creates a new prediction market via the Onit API
+
+2. **[useMarket](./hooks/use-market.ts)**
+   - Fetches data for a specific market
+
+3. **[useMakeBet](./hooks/use-make-bet.ts)**
+   - Places a bet on a market
+   - Handles transaction submission to the blockchain
+
+4. **[useGetBetCalldata](./hooks/use-get-bet-calldata.ts)**
+   - Generates calldata needed for betting transactions
+   - Used internally by useMakeBet
+
+5. **[useMarketParticipants](./hooks/use-market-participants.ts)**
+   - Fetches participants data for a specific market
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- An Onit API key
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone this repository
+2. Copy `.env.example` to `.env` and add your Onit API key:
+   ```
+   ONIT_API_KEY=your_api_key
+   ONIT_API_URL=https://markets.onit-labs.workers.dev/api
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Install dependencies:
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
 
-## Learn More
+4. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   bun dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Additional Resources
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Onit API Documentation](https://markets.onit-labs.workers.dev/api/~/docs)
+- [Current Onit Markets](https://onit.fun)
