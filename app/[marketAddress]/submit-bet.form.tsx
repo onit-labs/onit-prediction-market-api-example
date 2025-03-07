@@ -11,6 +11,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage
 } from "@/components/ui/form";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,10 +23,17 @@ import { useMarketParticipants } from "@/hooks/use-market-participants";
 import { useMakeBet } from "@/hooks/use-make-bet";
 import { useEffect } from "react";
 import { useAccount, useConnect } from "wagmi";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { spreadMarketSideMetadataSchema } from "@/lib/validators";
 
 const submitBetFormSchema = z.object({
   amount: z.coerce.bigint(),
+  firstSideScore: z.coerce.number().int().min(0),
+  secondSideScore: z.coerce.number().int().min(0),
 });
+
+// Use the type from the schema
+type MarketSideMetadata = z.infer<typeof spreadMarketSideMetadataSchema>;
 
 export default function SubmitBetForm() {
   const { isConnected } = useAccount();
@@ -39,9 +47,16 @@ export default function SubmitBetForm() {
 
   const form = useForm<z.infer<typeof submitBetFormSchema>>({
     resolver: zodResolver(submitBetFormSchema),
+    // defaultValues: {
+    //   amount: BigInt(0),
+    //   firstSideScore: 0,
+    //   secondSideScore: 0,
+    // }
   });
 
   const amount = form.watch("amount");
+  const firstSideScore = form.watch("firstSideScore");
+  const secondSideScore = form.watch("secondSideScore");
 
   // Check if wallet is connected, if not, try to connect
   useEffect(() => {
@@ -50,20 +65,18 @@ export default function SubmitBetForm() {
     }
   }, [connectors, isConnected, connect]);
 
-  console.log("market", market);
-  console.log("amount", amount);
-
   function onSubmit(values: z.infer<typeof submitBetFormSchema>) {
     makeBet(
       {
         marketAddress,
         marketType: 'spread',
-        bet: '2-1',
+        bet: `${values.firstSideScore}-${values.secondSideScore}`, // Format the score as a string
         value: parseEther(values.amount.toString()),
       },
       {
         onSuccess: (result) => {
           console.log("Bet placed successfully!", result);
+          form.reset();
         },
         onError: (error) => {
           console.error("Error placing bet:", error);
@@ -76,39 +89,129 @@ export default function SubmitBetForm() {
     return <div>Error: {error.message}</div>;
   }
 
+  // Extract team metadata for display
+  const metadata = market?.metadata || {};
+  const firstSideMetadata: MarketSideMetadata = (metadata.firstSide as MarketSideMetadata) || {};
+  const secondSideMetadata: MarketSideMetadata = (metadata.secondSide as MarketSideMetadata) || {};
+
+  const firstSideName = firstSideMetadata.name || "Team 1";
+  const secondSideName = secondSideMetadata.name || "Team 2";
+  const firstSideImage = firstSideMetadata.image || "";
+  const secondSideImage = secondSideMetadata.image || "";
+  const firstSideDesc = firstSideMetadata.description || "";
+  const secondSideDesc = secondSideMetadata.description || "";
+
   return (
-    <div>
-      <div className="flex flex-col gap-4 mt-4">
-        <h2 className="text-2xl font-bold">Market Details</h2>
-        <pre className="text-xs max-w-md overflow-x-scroll">
-          {JSON.stringify(market, bigIntReplacer, 2)}
-        </pre>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Place Your Bet</h1>
 
-        <h2 className="text-2xl font-bold">Market Participants</h2>
-        <pre className="text-xs max-w-md overflow-x-scroll">
-          {JSON.stringify(marketParticipants, bigIntReplacer, 2)}
-        </pre>
+      {market && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">{market.question}</h2>
+          <p className="text-gray-600 mb-4">{market.resolutionCriteria}</p>
+        </div>
+      )}
 
-        <h2 className="mt-8 text-2xl font-bold">Submit Bet</h2>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4 max-w-md"
-          >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
+          <div className="grid grid-cols-12 gap-8">
+            {/* First Side */}
+            <div className="col-span-6 space-y-4 p-6 border rounded-lg">
+              <h3 className="text-lg font-semibold">{firstSideName}</h3>
+              <div className="flex items-center gap-4 mb-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={firstSideImage} alt={firstSideName} />
+                  <AvatarFallback className="text-xs">{firstSideName?.[0] || "Team 1"}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-medium">{firstSideName}</p>
+                  <p className="text-sm text-gray-500">{firstSideDesc}</p>
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="firstSideScore"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Predicted Score</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="0"
+                        type="number"
+                        min="0"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Second Side */}
+            <div className="col-span-6 space-y-4 p-6 border rounded-lg">
+              <h3 className="text-lg font-semibold">{secondSideName}</h3>
+              <div className="flex items-center gap-4 mb-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={secondSideImage} alt={secondSideName} />
+                  <AvatarFallback className="text-xs">{secondSideName?.[0] || "T2"}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-medium">{secondSideName}</p>
+                  <p className="text-sm text-gray-500">{secondSideDesc}</p>
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="secondSideScore"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Predicted Score</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="0"
+                        type="number"
+                        min="0"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">Your Prediction</h3>
+
+            <div className="flex flex-col items-center justify-center mb-6">
+              <div className="flex items-center justify-center text-3xl font-bold mb-2">
+                <span className="mx-3">{firstSideScore}</span>
+                <span className="mx-2">-</span>
+                <span className="mx-3">{secondSideScore}</span>
+              </div>
+              <div className="flex items-center justify-center text-sm">
+                <span className="text-center w-24">{firstSideName}</span>
+                <span className="mx-2 text-gray-400">vs</span>
+                <span className="text-center w-24">{secondSideName}</span>
+              </div>
+            </div>
+
             <FormField
               control={form.control}
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormDescription>
-                    The amount of ETH to bet. (Currently{" "}
-                    {field.value?.toString() ?? "0"} ETH - submitted as{" "}
-                    {parseEther(field.value?.toString() ?? "0")} wei)
-                  </FormDescription>
+                  <FormLabel>Bet Amount (ETH)</FormLabel>
                   <FormControl>
                     <Input
-                      className="text-sm max-w-sm"
+                      className="text-lg"
                       type="number"
                       min={0}
                       step={0.01}
@@ -116,30 +219,56 @@ export default function SubmitBetForm() {
                       value={field.value?.toString() ?? ""}
                     />
                   </FormControl>
+                  <FormDescription>
+                    The amount of ETH you want to bet on this prediction.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
             <Button
               type="submit"
+              className="w-full mt-4 text-lg"
               disabled={isSubmittingBet}
             >
               {isSubmittingBet ? "Placing bet..." : "Submit Bet"}
             </Button>
-          </form>
-        </Form>
-      </div>
+          </div>
+        </form>
+      </Form>
 
       {!!madeBetTxHash && (
-        <>
-          <pre className="mt-2 text-sm w-full rounded-md bg-slate-950 p-4">
+        <div className="mt-8 p-6 bg-green-50 rounded-lg">
+          <h3 className="text-lg font-semibold text-green-700 mb-2">Bet Placed Successfully!</h3>
+          <pre className="mt-2 text-sm w-full rounded-md bg-slate-950 p-4 overflow-x-auto">
             <code className="text-white">
               {JSON.stringify(madeBetTxHash, bigIntReplacer, 2)}
             </code>
           </pre>
-
-        </>
+        </div>
       )}
+
+      {/* Debug Data Section */}
+      <div className="mt-10 border-t pt-8">
+        <h2 className="text-xl font-bold mb-4">Debug Data</h2>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Market Data</h3>
+            <pre className="text-xs max-w-full overflow-x-scroll p-4 bg-gray-100 rounded-md">
+              {JSON.stringify(market, bigIntReplacer, 2)}
+            </pre>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Market Participants</h3>
+            <pre className="text-xs max-w-full overflow-x-scroll p-4 bg-gray-100 rounded-md">
+              {JSON.stringify(marketParticipants, bigIntReplacer, 2)}
+            </pre>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
