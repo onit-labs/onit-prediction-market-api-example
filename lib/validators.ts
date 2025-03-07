@@ -21,6 +21,12 @@ export const spreadBetSchema = baseBetSchema.extend({
   metadata: z.object({
     firstSide: spreadMarketSideMetadataSchema,
     secondSide: spreadMarketSideMetadataSchema,
+    tags: z.union([
+      z.string().transform(val =>
+        val.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+      ),
+      z.array(z.string())
+    ]),
   }),
 });
 

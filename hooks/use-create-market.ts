@@ -40,7 +40,7 @@ async function createMarketQueryFn(
       };
       break;
     default:
-      throw new Error("Not implemented");
+      throw new Error(`Unsupported market type: ${market.marketType}`);
   }
 
   const response = await fetch("/api/proxy/markets", {

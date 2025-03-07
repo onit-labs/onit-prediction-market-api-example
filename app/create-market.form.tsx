@@ -194,6 +194,30 @@ export default function MarketForm() {
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="metadata.tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Tags
+                  <span className="text-sm font-semibold">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="sport,football,premier-league"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Tags help users find markets they are interested in. Enter a comma seperated list.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {marketType === "spread" && <SpreadMetadataForm form={form} />}
 
           <h2 className="text-lg font-bold">
