@@ -1,15 +1,12 @@
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import SuperJSON from "superjson";
 import { isAddress, isHex } from "viem";
 
 import type { Address, Hex } from "viem";
+import { preprocessSuperJSON } from "@/lib/utils";
 
 export const getBetCalldataResponseSchema = z.preprocess(
-    (val) => {
-        if (typeof val === "string") return SuperJSON.parse(val);
-        return val;
-    },
+    preprocessSuperJSON,
     z.object({
         success: z.boolean(),
         data: z.object({

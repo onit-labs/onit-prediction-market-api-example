@@ -6,7 +6,7 @@ if (!ONIT_API_KEY) {
   throw new Error("ONIT_API_KEY is not set");
 }
 
-const ONIT_API_URL = process.env.ONIT_API_URL!;
+const ONIT_API_URL = new URL(process.env.ONIT_API_URL!);
 
 if (!ONIT_API_URL) {
   throw new Error("ONIT_API_URL is not set");
@@ -22,7 +22,10 @@ export async function middleware(request: NextRequest) {
   // If the request is for the Onit API, attach the API key to the request and change the base URL
   if (/^\/api\/proxy/.test(path)) {
     // Change the base URL to the Onit API URL
-    const url = ONIT_API_URL + path.replace("/api/proxy", "");
+    const url = request.nextUrl.clone();
+    url.host = ONIT_API_URL.host;
+    url.pathname = url.pathname.replace("/proxy", "");
+    console.log("url", url);
     return NextResponse.rewrite(url, {
       headers: {
         // Attach the API key to the request
