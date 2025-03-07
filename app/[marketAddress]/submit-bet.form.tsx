@@ -19,16 +19,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useMarketParticipants } from "@/hooks/use-market-participants";
+import { useMakeBet } from "@/hooks/use-make-bet";
+import { useEffect } from "react";
+import { useAccount, useConnect } from "wagmi";
 
 const submitBetFormSchema = z.object({
   amount: z.coerce.bigint(),
 });
 
 export default function SubmitBetForm() {
+  const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+
   const { marketAddress } = useParams<{ marketAddress: Address }>();
   const { data: market, error } = useMarket(marketAddress);
   const { data: marketParticipants, error: marketParticipantsError } =
     useMarketParticipants(marketAddress);
+  const { mutate: makeBet, isPending: isSubmittingBet, data: madeBetTxHash } = useMakeBet();
 
   const form = useForm<z.infer<typeof submitBetFormSchema>>({
     resolver: zodResolver(submitBetFormSchema),
@@ -36,11 +43,33 @@ export default function SubmitBetForm() {
 
   const amount = form.watch("amount");
 
+  // Check if wallet is connected, if not, try to connect
+  useEffect(() => {
+    if (!isConnected && connectors.length > 0) {
+      connect({ connector: connectors[0] });
+    }
+  }, [connectors, isConnected, connect]);
+
   console.log("market", market);
   console.log("amount", amount);
 
   function onSubmit(values: z.infer<typeof submitBetFormSchema>) {
-    console.log("values", values);
+    makeBet(
+      {
+        marketAddress,
+        marketType: 'spread',
+        bet: '2-1',
+        value: parseEther(values.amount.toString()),
+      },
+      {
+        onSuccess: (result) => {
+          console.log("Bet placed successfully!", result);
+        },
+        onError: (error) => {
+          console.error("Error placing bet:", error);
+        }
+      }
+    );
   }
 
   if (error) {
@@ -91,10 +120,26 @@ export default function SubmitBetForm() {
               )}
             />
 
-            <Button type="submit">Submit Bet</Button>
+            <Button
+              type="submit"
+              disabled={isSubmittingBet}
+            >
+              {isSubmittingBet ? "Placing bet..." : "Submit Bet"}
+            </Button>
           </form>
         </Form>
       </div>
+
+      {!!madeBetTxHash && (
+        <>
+          <pre className="mt-2 text-sm w-full rounded-md bg-slate-950 p-4">
+            <code className="text-white">
+              {JSON.stringify(madeBetTxHash, bigIntReplacer, 2)}
+            </code>
+          </pre>
+
+        </>
+      )}
     </div>
   );
 }
