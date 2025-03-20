@@ -24,7 +24,7 @@ import { useMakeBet } from "@/hooks/use-make-bet";
 import { useEffect } from "react";
 import { useAccount, useConnect } from "wagmi";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { spreadMarketSideMetadataSchema } from "@/lib/validators";
+import { scoreMarketSideMetadataSchema } from "@/lib/validators";
 
 const submitBetFormSchema = z.object({
   amount: z.coerce.bigint(),
@@ -33,7 +33,7 @@ const submitBetFormSchema = z.object({
 });
 
 // Use the type from the schema
-type MarketSideMetadata = z.infer<typeof spreadMarketSideMetadataSchema>;
+type MarketSideMetadata = z.infer<typeof scoreMarketSideMetadataSchema>;
 
 export default function SubmitBetForm() {
   const { isConnected } = useAccount();
