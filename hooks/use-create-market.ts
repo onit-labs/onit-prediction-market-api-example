@@ -1,33 +1,28 @@
-import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Client } from "onit-markets";
-import { getApiResponseSchema } from "onit-markets";
 import client from "@/app/client";
-import SuperJSON from "superjson";
-
-type CreateMarketResponse = z.infer<ReturnType<typeof getApiResponseSchema>>;
 
 /**
  * Hook to create a market
  * @returns A mutation object for creating a market
  */
 export function useCreateMarket() {
-  const mutation = useMutation<CreateMarketResponse, Error, Parameters<Client["api"]["markets"]["$post"]>[0]["body"]>({
+  const mutation = useMutation({
     mutationFn: async (market) => {
+      // Call the markets post endpoint
       const response = await client.api.markets.$post({
-        json: SuperJSON.stringify(market)
-      });
+        json: market
+      }).then((res) => res.json());
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to create market");
+        throw new Error("Failed to create market");
       }
 
-      return response;
+      return response.data;
     },
     onSuccess: (response) => {
       if (response.success) {
-        toast.success("Market created successfully");
+        toast.success(`Market created successfully! Address: ${response.data.marketAddress}`);
       }
     },
     onError: (error) => {
