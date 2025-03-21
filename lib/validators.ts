@@ -5,22 +5,22 @@ export const baseBetSchema = z.object({
   resolutionCriteria: z.string(),
 });
 
-export const spreadMarketSideMetadataSchema = z.object({
+export const scoreMarketSideMetadataSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   image: z.string().optional(),
 });
 
-export const spreadBetSchema = baseBetSchema.extend({
-  marketType: z.literal("spread"),
+export const scoreBetSchema = baseBetSchema.extend({
+  marketType: z.literal("score"),
   bettingCutoff: z.coerce.bigint(),
   initialBet: z.object({
     firstSideScore: z.coerce.number().min(0),
     secondSideScore: z.coerce.number().min(0),
   }),
   metadata: z.object({
-    firstSide: spreadMarketSideMetadataSchema,
-    secondSide: spreadMarketSideMetadataSchema,
+    firstSide: scoreMarketSideMetadataSchema,
+    secondSide: scoreMarketSideMetadataSchema,
     tags: z.union([
       z.string().transform(val =>
         val.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
@@ -37,6 +37,6 @@ export const daysUntilSchema = baseBetSchema.extend({
 });
 
 export const createMarketFormSchema = z.discriminatedUnion("marketType", [
-  spreadBetSchema,
+  scoreBetSchema,
   daysUntilSchema,
 ]);

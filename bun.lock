@@ -16,6 +16,7 @@
         "clsx": "^2.1.1",
         "lucide-react": "^0.477.0",
         "next": "15.2.1",
+        "onit-markets": "^0.1.5",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-dropzone": "^14.3.8",
@@ -84,6 +85,8 @@
     "@farcaster/frame-sdk": ["@farcaster/frame-sdk@0.0.30", "", { "dependencies": { "@farcaster/frame-core": "0.0.28", "comlink": "^4.4.2", "eventemitter3": "^5.0.1", "ox": "^0.4.4" } }, "sha512-ualx1GN3H/p5irniByBo/o9UaSLuO1vVKn8oDhUgd8uihiluWBTgHL1XZJXl+R5Vcq0mZU2Gnrk/5WKE1I8bwQ=="],
 
     "@farcaster/frame-wagmi-connector": ["@farcaster/frame-wagmi-connector@0.0.18", "", { "peerDependencies": { "@farcaster/frame-sdk": "^0.0.30", "@wagmi/core": "^2.14.1", "viem": "^2.21.55" } }, "sha512-HVFrbBCtWzQbESJ/xToXr451iK67Cxo1Xvb0iujD6DVmAQrIj7PJQ8NGxNUPEJ2dul3QsykQCUEymw2EKVfWsA=="],
+
+    "@hono/client": ["@hono/client@0.0.3", "", {}, "sha512-1TrYdppLelv39uCqevePjKUeyf4AoKYWQ+/qfNtRzY8OPBur78XA1Gtv3Pi08uXT6GOuQN5fi3IFUwMsxnEhcQ=="],
 
     "@hookform/resolvers": ["@hookform/resolvers@4.1.3", "", { "dependencies": { "@standard-schema/utils": "^0.3.0" }, "peerDependencies": { "react-hook-form": "^7.0.0" } }, "sha512-Jsv6UOWYTrEFJ/01ZrnwVXs7KDvP8XIo115i++5PWvNkNvkrsTfGiLS6w+eJ57CYtUtDQalUWovCZDHFJ8u1VQ=="],
 
@@ -980,6 +983,8 @@
     "on-exit-leak-free": ["on-exit-leak-free@0.2.0", "", {}, "sha512-dqaz3u44QbRXQooZLTUKU41ZrzYrcvLISVgbrzbyCMxpmSLJvZ3ZamIJIZ29P6OhZIkNIQKosdeM6t1LYbA9hg=="],
 
     "once": ["once@1.4.0", "", { "dependencies": { "wrappy": "1" } }, "sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w=="],
+
+    "onit-markets": ["onit-markets@0.1.5", "", { "dependencies": { "@hono/client": "0.0.3", "superjson": "2.2.2" }, "peerDependencies": { "zod": ">3" }, "bin": { "client": "dist/index.js" } }, "sha512-H44i60pxy4U/KdO89EpXVyfZxK6AfWqxDp/nuo/9uAbMw/AeqwX7AdqQba40ugUBTqnvhSRlq7TCNUSSmJ/WJQ=="],
 
     "optionator": ["optionator@0.9.4", "", { "dependencies": { "deep-is": "^0.1.3", "fast-levenshtein": "^2.0.6", "levn": "^0.4.1", "prelude-ls": "^1.2.1", "type-check": "^0.4.0", "word-wrap": "^1.2.5" } }, "sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g=="],
 

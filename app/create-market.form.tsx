@@ -110,7 +110,7 @@ export default function MarketForm() {
                     defaultValue={field.value}
                   >
                     {[
-                      ["Spread Bet", "spread"],
+                      ["Score Bet", "score"],
                       ["Days Until", "days-until"],
                       // ["Other", "other"],
                     ].map((option, index) => (
@@ -166,7 +166,7 @@ export default function MarketForm() {
               <FormItem className="flex flex-col">
                 <FormLabel>
                   Betting Cutoff{" "}
-                  {marketType === "spread" && (
+                  {marketType === "score" && (
                     <span className="text-sm font-semibold">*</span>
                   )}
                 </FormLabel>
@@ -180,7 +180,7 @@ export default function MarketForm() {
                 />
                 <FormDescription>
                   The date and time when the market should stop accepting bets.
-                  {marketType === "spread" && (
+                  {marketType === "score" && (
                     <>
                       <br />
                       <span className="text-sm font-semibold text-red-500">
@@ -218,13 +218,13 @@ export default function MarketForm() {
             )}
           />
 
-          {marketType === "spread" && <SpreadMetadataForm form={form} />}
+          {marketType === "score" && <SpreadMetadataForm form={form} />}
 
           <h2 className="text-lg font-bold">
             All markets must be started with an initial bet
           </h2>
           <div className="grid grid-cols-12 gap-4">
-            {marketType === "spread" && (
+            {marketType === "score" && (
               <>
                 <div className="col-span-6">
                   <FormField
@@ -307,7 +307,7 @@ export default function MarketForm() {
             </code>
           </pre>
           <Link
-            href={`/${createdMarket.data.marketAddress}`}
+            href={`/${createdMarket?.data?.marketAddress}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-blue-500"
