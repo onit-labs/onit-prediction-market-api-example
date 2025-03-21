@@ -1,19 +1,45 @@
 # Onit Prediction Market API Example
 
-This repository demonstrates how to integrate with the [Onit Prediction Market API](https://markets.onit-labs.workers.dev/api/~/docs) to create and interact with prediction markets. The example includes a complete Next.js application showcasing market creation and betting functionality.
+This repository demonstrates how to integrate with the [Onit Prediction Market API](https://markets.onit-labs.workers.dev/api/~/docs) using the [`onit-markets`](https://www.npmjs.com/package/onit-markets) npm package to create and interact with prediction markets. The example includes a complete Next.js application showcasing market creation and betting functionality.
 
 ## Overview
 
-The Onit Prediction Market API allows developers to:
+The [API](https://markets.onit-labs.workers.dev/api/~/docs) allows developers to:
 - Create new prediction markets
 - Fetch market data and participants
 - Place bets on existing markets
 - Resolve their markets and distribute winnings to bettors (coming soon)
 
-This example application demonstrates these capabilities with a simple, user-friendly interface.
+The [package](https://www.npmjs.com/package/onit-markets) provides a type safe client for interacting with this API.
 
 ## Demo
 
+### Setup
+
+See the [app/client.ts](./app/client.ts) file for how to initialize the client with your API endpoint that should proxy requests to the Onit API (to protect your API key)
+```typescript
+/// app/client.ts
+import { getClient } from 'onit-markets';
+
+const client = getClient('http://localhost:3001/proxy');
+
+export default client;
+```
+
+See the [app/proxy/[...catchall]/route.ts](./app/proxy/[...catchall]/route.ts) file for how to create a proxy route to proxy requests to the Onit API (to protect your API key)
+```typescript
+/// app/proxy/[...catchall]/route.ts
+async function proxyRequest(request: NextRequest) {
+   
+   const headers = {
+      // ... additional headers here
+      Authorization: "Bearer " + ONIT_API_KEY,
+   } as Record<string, string>;
+
+  // ...
+   ```
+
+### Application Pages
 The application includes two main pages:
 
 1. **[Market Creation Page](./app/page.tsx)**
@@ -52,6 +78,8 @@ The application uses custom React hooks to interact with the Onit API:
 ### Prerequisites
 
 - An Onit API key
+- Node.js 18+ or Bun
+- A Web3 wallet (e.g., MetaMask)
 
 ### Setup
 
@@ -81,4 +109,5 @@ The application uses custom React hooks to interact with the Onit API:
 ## Additional Resources
 
 - [Onit API Documentation](https://markets.onit-labs.workers.dev/api/~/docs)
+- [`onit-markets` npm package](https://www.npmjs.com/package/onit-markets)
 - [Current Onit Markets](https://onit.fun)

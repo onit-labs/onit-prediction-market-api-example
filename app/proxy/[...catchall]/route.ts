@@ -1,13 +1,11 @@
 import { NextRequest } from "next/server";
 
+const ONIT_API_URL = process.env.ONIT_API_URL;
 const ONIT_API_KEY = process.env.ONIT_API_KEY;
 
 if (!ONIT_API_KEY) {
   throw new Error("ONIT_API_KEY is not set");
 }
-
-// const ONIT_API_URL = 'https://preview-markets.onit-labs.workers.dev'
-const ONIT_API_URL = 'http://localhost:8787' // 'https://preview-markets.onit-labs.workers.dev/api'
 
 async function proxyRequest(request: NextRequest) {
   const url = request.nextUrl.clone();
