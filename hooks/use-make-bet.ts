@@ -11,7 +11,7 @@ import type { Address } from "viem";
  */
 export function useMakeBet(
   args: GetBetCalldataParams,
-  opts: UseSendTransactionParameters
+  opts?: UseSendTransactionParameters
 ) {
   const { sendTransaction, sendTransactionAsync, ...rest } =
     useSendTransaction(opts);
