@@ -1,67 +1,59 @@
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { isAddress, isHex } from "viem";
+import { queryOptions, useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { onitMarketsClient } from "@/app/client";
+import { ExtractResponseType } from "onit-markets";
 
-import type { Address, Hex } from "viem";
-import { preprocessSuperJSON } from "@/lib/utils";
+type GetBetQueryArgs = Parameters<
+  (typeof onitMarketsClient.markets)[":marketAddress"]["bet"]["$get"]
+>[0];
 
-export const getBetCalldataResponseSchema = z.preprocess(
-    preprocessSuperJSON,
-    z.object({
-        success: z.boolean(),
-        data: z.object({
-            type: z.literal("calldata"),
-            to: z.string().refine((val): val is Address => isAddress(val)),
-            value: z.string().or(z.bigint()), // Amount to be sent with transaction
-            calldata: z.string().refine((val): val is Hex => isHex(val)),
-        }),
-    })
-);
+type GetBetCalldataResult = ExtractResponseType<
+  (typeof onitMarketsClient.markets)[":marketAddress"]["bet"]["$get"]
+>;
 
-type GetBetCalldataResponse = z.infer<typeof getBetCalldataResponseSchema>;
+export type GetBetCalldataParams = GetBetQueryArgs["query"] & {
+  marketAddress: GetBetQueryArgs["param"]["marketAddress"];
+};
 
-export interface GetBetCalldataParams {
-    marketAddress: Address;
-    marketType: "spread"; // Currently only supporting spread markets
-    bet: string; // Format: "firstSideScore-secondSideScore" (e.g., "2-1")
-    value: bigint;
-}
+export const getBetCalldataQueryOptions = <
+  T extends Omit<UseQueryOptions<GetBetCalldataResult>, "queryKey" | "queryFn">
+>(
+  args: GetBetCalldataParams,
+  opts?: T
+) =>
+  queryOptions({
+    ...opts,
+    enabled: !!args.marketAddress && (opts?.enabled ?? true),
+    queryKey: ["onit-markets", "bet", args],
+    async queryFn() {
+      const { marketAddress, ...query } = args;
+      const response = await onitMarketsClient.markets[
+        ":marketAddress"
+      ].bet.$get({ param: { marketAddress }, query });
 
-/**
- * Fetches calldata needed to submit a bet to a market contract
- */
-export async function getBetCalldataQueryFn(
-    bet: GetBetCalldataParams
-): Promise<GetBetCalldataResponse> {
-    const params = new URLSearchParams({
-        marketType: "spread",
-        bet: bet.bet, // Format: "firstSideScore-secondSideScore"
-        value: bet.value.toString(), // Convert bigint to string
-        type: "calldata" // Will return the calldata to call to make the bet
-    });
+      if (!response.ok) {
+        throw new Error("Failed to get bet calldata");
+      }
 
-    const response = await fetch(`/api/proxy/markets/${bet.marketAddress}/bet?${params.toString()}`);
+      const json = await response.json();
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error("Failed to get bet calldata", {
-            cause: errorText,
-        });
-    }
+      if (!json.success) {
+        throw new Error("Failed to get bet calldata");
+      }
 
-    return getBetCalldataResponseSchema.parse(await response.text());
-}
+      return json.data;
+    },
+  });
 
 /**
  * Hook to get calldata needed for submitting a bet to a market contract
- * @returns A mutation object for getting bet calldata
+ * @returns A query object for getting bet calldata
  */
-export function useGetBetCalldata() {
-    return useMutation({
-        mutationFn: getBetCalldataQueryFn,
-        onError: (error) => {
-            console.error("Failed to get bet calldata:", error);
-        },
-    });
-} 
+export function useGetBetCalldata(
+  args: GetBetCalldataParams,
+  opts?: Omit<
+    ReturnType<typeof getBetCalldataQueryOptions>,
+    "queryKey" | "queryFn"
+  >
+) {
+  return useQuery(getBetCalldataQueryOptions(args, opts));
+}
