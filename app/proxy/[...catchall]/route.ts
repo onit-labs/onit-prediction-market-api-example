@@ -1,11 +1,10 @@
+import { shouldNeverHappen } from "@/lib/should-never-happen";
 import { NextRequest } from "next/server";
 
-const ONIT_API_URL = process.env.ONIT_API_URL;
-const ONIT_API_KEY = process.env.ONIT_API_KEY;
-
-if (!ONIT_API_KEY) {
-  throw new Error("ONIT_API_KEY is not set");
-}
+const ONIT_API_URL =
+	process.env.ONIT_API_URL || shouldNeverHappen("ONIT_API_URL is not set");
+const ONIT_API_KEY =
+	process.env.ONIT_API_KEY || shouldNeverHappen("ONIT_API_KEY is not set");
 
 async function proxyRequest(request: NextRequest) {
   const url = request.nextUrl.clone();
