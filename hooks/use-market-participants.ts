@@ -1,60 +1,57 @@
-import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
-import SuperJSON from "superjson";
-import { isAddress } from "viem";
+import { onitMarketsClient } from "@/app/client";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 
+import type { UseQueryOptions } from "@tanstack/react-query";
+import type { ExtractResponseType } from "onit-markets";
 import type { Address } from "viem";
 
-// see https://markets.onit-labs.workers.dev/api/~/docs#tag/default/GET/api/markets/{marketAddress}/participants
-const getMarketParticipantsResponseSchema = z.preprocess(
-  (val) => {
-    if (typeof val === "string") return SuperJSON.parse(val);
-    return val;
-  },
-  z.object({
-    success: z.boolean(),
-    data: z.object({}).passthrough(),
-  })
-);
+type GetMarketParticipantsResult = ExtractResponseType<
+  (typeof onitMarketsClient.markets)[":marketAddress"]["participants"]["$get"]
+>;
 
-type GetMarketParticipantsResponse = z.infer<
-  typeof getMarketParticipantsResponseSchema
->["data"];
+export const getMarketParticipantsQueryOptions = <
+  T extends Omit<
+    UseQueryOptions<GetMarketParticipantsResult>,
+    "queryKey" | "queryFn"
+  >
+>(
+  marketAddress: Address,
+  opts?: T
+) =>
+  queryOptions({
+    ...opts,
+    enabled: !!marketAddress && (opts?.enabled ?? true),
+    queryKey: ["onit-markets", "market-participants", marketAddress],
+    async queryFn() {
+      const response = await onitMarketsClient.markets[
+        ":marketAddress"
+      ].participants.$get({ param: { marketAddress } });
 
-async function getMarketParticipantsQueryFn(
-  marketAddress: Address
-): Promise<GetMarketParticipantsResponse> {
-  if (!isAddress(marketAddress)) {
-    throw new Error("Invalid market address");
-  }
+      if (!response.ok) {
+        throw new Error("Failed to get market participants");
+      }
 
-  const response = await fetch(
-    `/api/proxy/markets/${marketAddress}/participants`
-  );
+      const json = await response.json();
 
-  if (!response.ok) {
-    throw new Error("Failed to get market", {
-      cause: await response.text(),
-    });
-  }
+      if (!json.success) {
+        throw new Error("Failed to get market participants");
+      }
 
-  const { data } = getMarketParticipantsResponseSchema.parse(
-    await response.text()
-  );
-
-  return data;
-}
+      return json.data;
+    },
+  });
 
 /**
  * Hook to get a market's participants
  * @param marketAddress - The address of the market to get participants for
  * @returns A query object for getting a market's participants
  */
-export function useMarketParticipants(marketAddress: Address) {
-  const query = useQuery({
-    queryKey: ["market-participants", marketAddress],
-    queryFn: () => getMarketParticipantsQueryFn(marketAddress),
-  });
-
-  return query;
+export function useMarketParticipants(
+  marketAddress: Address,
+  opts?: Omit<
+    ReturnType<typeof getMarketParticipantsQueryOptions>,
+    "queryKey" | "queryFn"
+  >
+) {
+  return useQuery(getMarketParticipantsQueryOptions(marketAddress, opts));
 }

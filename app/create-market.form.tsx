@@ -19,11 +19,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { DatetimePicker } from "@/components/ui/datetime-picker";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { createMarketFormSchema } from "@/lib/validators";
+import {
+  createMarketFormSchema,
+  type CreateMarketSchema,
+} from "@/lib/validators";
 import { useCreateMarket } from "@/hooks/use-create-market";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { bigIntReplacer } from "@/lib/utils";
+import { MarketType } from "onit-markets";
 
 export default function MarketForm() {
   const form = useForm<z.infer<typeof createMarketFormSchema>>({
@@ -34,33 +38,41 @@ export default function MarketForm() {
 
   const { mutate: createMarket, data: createdMarket } = useCreateMarket();
 
-  console.log("createdMarket", createdMarket);
-
-  function onSubmit(values: z.infer<typeof createMarketFormSchema>) {
-    createMarket(values, {
-      onError: (error) => {
-        console.error(error);
-        toast.error("Failed to create market");
+  function onSubmit(values: CreateMarketSchema) {
+    return createMarket(
+      {
+        question: values.question,
+        resolutionCriteria: values.resolutionCriteria,
+        marketType: values.marketType,
+        bettingCutoff: values.bettingCutoff,
+        initialBet: values.initialBet,
+        metadata: values.metadata,
       },
-      onSettled: () => {
-        toast(
-          <pre className="mt-2 w-[340px] text-sm rounded-md bg-slate-950 p-4">
-            <code className="text-white">
-              {JSON.stringify(values, bigIntReplacer, 2)}
-            </code>
-          </pre>
-        );
-      },
-      onSuccess: () => {
-        toast(
-          <pre className="mt-2 w-[340px] text-sm rounded-md bg-slate-950 p-4">
-            <code className="text-white">
-              {JSON.stringify(values, bigIntReplacer, 2)}
-            </code>
-          </pre>
-        );
-      },
-    });
+      {
+        onError: (error) => {
+          console.error(error);
+          toast.error("Failed to create market");
+        },
+        onSettled: () => {
+          toast(
+            <pre className="mt-2 w-[340px] text-sm rounded-md bg-slate-950 p-4">
+              <code className="text-white">
+                {JSON.stringify(values, bigIntReplacer, 2)}
+              </code>
+            </pre>
+          );
+        },
+        onSuccess: () => {
+          toast(
+            <pre className="mt-2 w-[340px] text-sm rounded-md bg-slate-950 p-4">
+              <code className="text-white">
+                {JSON.stringify(values, bigIntReplacer, 2)}
+              </code>
+            </pre>
+          );
+        },
+      }
+    );
   }
 
   return (
@@ -110,8 +122,8 @@ export default function MarketForm() {
                     defaultValue={field.value}
                   >
                     {[
-                      ["Score Bet", "score"],
-                      ["Days Until", "days-until"],
+                      ["Score Bet", MarketType.Score],
+                      ["Days Until", MarketType.DaysUntil],
                       // ["Other", "other"],
                     ].map((option, index) => (
                       <FormItem
@@ -166,7 +178,7 @@ export default function MarketForm() {
               <FormItem className="flex flex-col">
                 <FormLabel>
                   Betting Cutoff{" "}
-                  {marketType === "score" && (
+                  {marketType === MarketType.Score && (
                     <span className="text-sm font-semibold">*</span>
                   )}
                 </FormLabel>
@@ -180,7 +192,7 @@ export default function MarketForm() {
                 />
                 <FormDescription>
                   The date and time when the market should stop accepting bets.
-                  {marketType === "score" && (
+                  {marketType === MarketType.Score && (
                     <>
                       <br />
                       <span className="text-sm font-semibold text-red-500">
@@ -211,20 +223,23 @@ export default function MarketForm() {
                   />
                 </FormControl>
                 <FormDescription>
-                  Tags help users find markets they are interested in. Enter a comma seperated list.
+                  Tags help users find markets they are interested in. Enter a
+                  comma seperated list.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {marketType === "score" && <SpreadMetadataForm form={form} />}
+          {marketType === MarketType.Score && (
+            <SpreadMetadataForm form={form} />
+          )}
 
           <h2 className="text-lg font-bold">
             All markets must be started with an initial bet
           </h2>
           <div className="grid grid-cols-12 gap-4">
-            {marketType === "score" && (
+            {marketType === MarketType.Score && (
               <>
                 <div className="col-span-6">
                   <FormField
@@ -272,7 +287,7 @@ export default function MarketForm() {
               </>
             )}
 
-            {marketType === "days-until" && (
+            {marketType === MarketType.DaysUntil && (
               <div className="col-span-6">
                 <FormField
                   control={form.control}
@@ -307,7 +322,7 @@ export default function MarketForm() {
             </code>
           </pre>
           <Link
-            href={`/${createdMarket?.data?.marketAddress}`}
+            href={`/${createdMarket.marketAddress}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-blue-500"

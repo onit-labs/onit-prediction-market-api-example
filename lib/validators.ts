@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  createDaysUntilMarketSchema,
+  createScoreMarketSchema,
+  createDiscreteMarketSchema,
+  createNormalMarketSchema,
+  createPercentageMarketSchema,
+} from "onit-markets/validators";
 
 export const baseBetSchema = z.object({
   question: z.string().min(1),
@@ -22,10 +29,13 @@ export const scoreBetSchema = baseBetSchema.extend({
     firstSide: scoreMarketSideMetadataSchema,
     secondSide: scoreMarketSideMetadataSchema,
     tags: z.union([
-      z.string().transform(val =>
-        val.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+      z.string().transform((val) =>
+        val
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag !== "")
       ),
-      z.array(z.string())
+      z.array(z.string()),
     ]),
   }),
 });
@@ -36,7 +46,17 @@ export const daysUntilSchema = baseBetSchema.extend({
   bettingCutoff: z.coerce.bigint().optional(),
 });
 
-export const createMarketFormSchema = z.discriminatedUnion("marketType", [
-  scoreBetSchema,
-  daysUntilSchema,
+export const createMarketFormSchema = z.union([
+  createScoreMarketSchema,
+  createDaysUntilMarketSchema,
+  createDiscreteMarketSchema,
+  createNormalMarketSchema,
+  createPercentageMarketSchema,
 ]);
+
+export type CreateMarketSchema =
+  | z.infer<typeof createScoreMarketSchema>
+  | z.infer<typeof createDiscreteMarketSchema>
+  | z.infer<typeof createDaysUntilMarketSchema>
+  | z.infer<typeof createNormalMarketSchema>
+  | z.infer<typeof createPercentageMarketSchema>;
