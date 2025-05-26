@@ -1,35 +1,64 @@
-import { useMutation } from "@tanstack/react-query";
 import { useSendTransaction } from "wagmi";
-import { GetBetCalldataParams, getBetCalldataQueryFn } from "./use-get-bet-calldata";
-import { Address } from "viem";
+import { useGetBetCalldata } from "./use-get-bet-calldata";
+
+import type { UseSendTransactionParameters } from "wagmi";
+import type { GetBetCalldataParams } from "./use-get-bet-calldata";
+import type { Address } from "viem";
 
 /**
  * Hook to make a bet
  * @returns a mutation that takes a bet object and gets the calldata for that bet, then sends the transaction
  */
-export function useMakeBet() {
-    const { sendTransactionAsync } = useSendTransaction();
+export function useMakeBet(
+  args: GetBetCalldataParams,
+  opts?: UseSendTransactionParameters
+) {
+  const { sendTransaction, sendTransactionAsync, ...rest } =
+    useSendTransaction(opts);
 
-    return useMutation({
-        mutationFn: async (params: GetBetCalldataParams) => {
-            // Get the calldata for the bet
-            const calldataResponse = await getBetCalldataQueryFn(params);
+  const { data: betData } = useGetBetCalldata(args);
 
-            if (!calldataResponse?.success) {
-                throw new Error("Failed to generate bet calldata: API returned unsuccessful response");
-            }
+  const makeBet = (opts: Parameters<typeof sendTransaction>[1]) => {
+    if (!betData) {
+      throw new Error("Failed to generate bet calldata: No bet calldata found");
+    }
 
-            // Extract the data we need for the transaction
-            const { data: betData } = calldataResponse;
+    // Send the transaction
+    const hash = sendTransaction(
+      {
+        to: betData.to as Address,
+        value: BigInt(betData.value),
+        data: betData.calldata,
+      },
+      opts
+    );
 
-            // Send the transaction
-            const hash = await sendTransactionAsync({
-                to: betData.to as Address,
-                value: BigInt(betData.value),
-                data: betData.calldata,
-            });
+    return { hash };
+  };
 
-            return { hash };
-        }
-    });
-} 
+  const makeBetAsync = async (
+    opts: Parameters<typeof sendTransactionAsync>[1]
+  ) => {
+    if (!betData) {
+      throw new Error("Failed to generate bet calldata: No bet calldata found");
+    }
+
+    // Send the transaction
+    const hash = await sendTransactionAsync(
+      {
+        to: betData.to as Address,
+        value: BigInt(betData.value),
+        data: betData.calldata,
+      },
+      opts
+    );
+
+    return { hash };
+  };
+
+  return {
+    ...rest,
+    makeBet,
+    makeBetAsync,
+  };
+}
