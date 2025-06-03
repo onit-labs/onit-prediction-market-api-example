@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import client from "@/app/client";
+import { onitMarketsClient } from "@/app/client";
 import type { Address } from "viem";
 
 /**
@@ -11,7 +11,7 @@ export function useMarket(marketAddress: Address) {
   const query = useQuery({
     queryKey: ["market", marketAddress],
     queryFn: async () => {
-      const marketDeploymentRes = await client.api.markets[":marketAddress"]
+      const marketDeploymentRes = await onitMarketsClient.markets[":marketAddress"]
         .$get({ param: { marketAddress } }).then((res) => res.json());
 
       if (!marketDeploymentRes.success) {

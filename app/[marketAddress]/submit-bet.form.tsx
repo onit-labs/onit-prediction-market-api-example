@@ -69,7 +69,7 @@ export default function SubmitBetForm() {
     makeBet(
       {
         marketAddress,
-        marketType: 'spread',
+        marketType: 'score',
         bet: `${values.firstSideScore}-${values.secondSideScore}`, // Format the score as a string
         value: parseEther(values.amount.toString()),
       },

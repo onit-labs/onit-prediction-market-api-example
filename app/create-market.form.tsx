@@ -307,7 +307,7 @@ export default function MarketForm() {
             </code>
           </pre>
           <Link
-            href={`/${createdMarket?.data?.marketAddress}`}
+            href={`/${createdMarket?.marketAddress}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-blue-500"

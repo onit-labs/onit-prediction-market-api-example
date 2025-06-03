@@ -2,6 +2,7 @@ import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import SuperJSON from "superjson";
 import { isAddress } from "viem";
+import { onitMarketsClient } from "@/app/client";
 
 import type { Address } from "viem";
 
@@ -28,20 +29,11 @@ async function getMarketParticipantsQueryFn(
     throw new Error("Invalid market address");
   }
 
-  const response = await fetch(
-    `/api/proxy/markets/${marketAddress}/participants`
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to get market", {
-      cause: await response.text(),
-    });
-  }
-
-  const { data } = getMarketParticipantsResponseSchema.parse(
-    await response.text()
-  );
-
+  const response = await onitMarketsClient.markets[":marketAddress"].participants.$get({
+    param: { marketAddress }
+  });
+  const json = await response.json();
+  const { data } = getMarketParticipantsResponseSchema.parse(JSON.stringify(json));
   return data;
 }
 

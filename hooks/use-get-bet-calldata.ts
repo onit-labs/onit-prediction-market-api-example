@@ -4,6 +4,7 @@ import { isAddress, isHex } from "viem";
 
 import type { Address, Hex } from "viem";
 import { preprocessSuperJSON } from "@/lib/utils";
+import { onitMarketsClient } from "@/app/client";
 
 export const getBetCalldataResponseSchema = z.preprocess(
     preprocessSuperJSON,
@@ -22,7 +23,7 @@ type GetBetCalldataResponse = z.infer<typeof getBetCalldataResponseSchema>;
 
 export interface GetBetCalldataParams {
     marketAddress: Address;
-    marketType: "spread"; // Currently only supporting spread markets
+    marketType: "score";
     bet: string; // Format: "firstSideScore-secondSideScore" (e.g., "2-1")
     value: bigint;
 }
@@ -33,24 +34,27 @@ export interface GetBetCalldataParams {
 export async function getBetCalldataQueryFn(
     bet: GetBetCalldataParams
 ): Promise<GetBetCalldataResponse> {
-    const params = new URLSearchParams({
-        marketType: "spread",
-        bet: bet.bet, // Format: "firstSideScore-secondSideScore"
-        value: bet.value.toString(), // Convert bigint to string
-        type: "calldata" // Will return the calldata to call to make the bet
-    });
-
-    const response = await fetch(`/api/proxy/markets/${bet.marketAddress}/bet?${params.toString()}`);
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error("Failed to get bet calldata", {
-            cause: errorText,
-        });
+    // Only supporting 'spread' (score) markets for now
+    const [firstSideScore, secondSideScore] = bet.bet.split("-").map(Number);
+    if (
+        isNaN(firstSideScore) ||
+        isNaN(secondSideScore)
+    ) {
+        throw new Error("Only 'spread' (score) markets are supported and bet must be in 'firstSideScore-secondSideScore' format");
     }
 
-    return getBetCalldataResponseSchema.parse(await response.text());
+    const response = await onitMarketsClient.markets[":marketAddress"].bet.$get({
+        param: { marketAddress: bet.marketAddress },
+        query: {
+            value: bet.value.toString(),
+            type: "calldata",
+            bet: { firstSideScore, secondSideScore },
+            marketType: "score"
+        }
+    });
+
+    const json = await response.json();
+    return getBetCalldataResponseSchema.parse(json);
 }
 
 /**
